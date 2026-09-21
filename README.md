@@ -10,7 +10,3 @@
 ## Getting Started
 
 Это стандартный проект Flutter. Экран приложения реализован в `lib/main.dart` как `StatelessWidget` (класс `GpuInfoPage`) и содержит: заголовок, название и описание видеокарты, изображение и список характеристик, а также данные автора работы.
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
