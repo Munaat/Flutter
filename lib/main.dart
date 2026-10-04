@@ -21,14 +21,44 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class GpuInfoPage extends StatelessWidget {
+// Список изображений для циклической смены в области "картинки".
+// Хранится вне State, так как сам список не меняется — меняется только
+// индекс текущего показанного изображения.
+const List<String> kGpuImages = [
+  'assets/images/video-card.png',
+  'assets/images/processor.png',
+  'assets/images/chip.png',
+  'assets/images/motherboard.png',
+  'assets/images/ram.png',
+];
+
+class GpuInfoPage extends StatefulWidget {
   const GpuInfoPage({super.key});
+
+  @override
+  State<GpuInfoPage> createState() => _GpuInfoPageState();
+}
+
+class _GpuInfoPageState extends State<GpuInfoPage> {
+  // State: индекс текущего изображения в списке kGpuImages.
+  int _imageIndex = 0;
+
+  // Переключает изображение на следующее по кругу (после последнего —
+  // снова первое). Вызывается и по нажатию на кнопку, и по тапу на картинке.
+  void _nextImage() {
+    setState(() {
+      _imageIndex = (_imageIndex + 1) % kGpuImages.length;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ВИДЕОКАРТЫ'),
+        title: const Text(
+          'ВИДЕОКАРТЫ',
+          style: TextStyle(fontFamily: 'Orbitron', letterSpacing: 2),
+        ),
         centerTitle: true,
         backgroundColor: Colors.lightGreen,
       ), // AppBar
@@ -73,25 +103,28 @@ class GpuInfoPage extends StatelessWidget {
             ), // Container: описание ПО
             const SizedBox(height: 16),
 
-            // Картинка + список характеристик
+            // Картинка (с циклической сменой по тапу) + список характеристик
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Container(
-                    height: 160,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
+                  child: GestureDetector(
+                    onTap: _nextImage,
+                    child: Container(
+                      height: 160,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        kGpuImages[_imageIndex],
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.contain,
+                      ), // Image.asset
                     ),
-                    alignment: Alignment.center,
-                    child: Image.network(
-                      'https://img.icons8.com/color/256/video-card.png',
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.contain,
-                    ), // Image.network
-                  ),
+                  ), // GestureDetector: тап по картинке переключает её
                 ), // Expanded: картинка
                 const SizedBox(width: 16),
                 Expanded(
@@ -117,7 +150,17 @@ class GpuInfoPage extends StatelessWidget {
                 ), // Expanded: список характеристик
               ],
             ), // Row: картинка + список
+            const SizedBox(height: 12),
+
+            // Кнопка для смены изображения (дублирует тап по картинке)
+            Center(
+              child: ElevatedButton(
+                onPressed: _nextImage,
+                child: const Text('Следующее изображение'),
+              ),
+            ), // Center: кнопка смены картинки
             const SizedBox(height: 16),
+
             const Divider(),
             const SizedBox(height: 16),
 
