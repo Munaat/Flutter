@@ -80,6 +80,7 @@ class GpuInfoPage extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(spec.title),
+        persist: false, // возвращает автоматическое скрытие по duration
         action: SnackBarAction(
           label: 'OK',
           onPressed: () {},
