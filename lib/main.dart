@@ -21,9 +21,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Список изображений для циклической смены в области "картинки".
-// Хранится вне State, так как сам список не меняется — меняется только
-// индекс текущего показанного изображения.
+// Список изображений для горизонтального ListView.
 const List<String> kGpuImages = [
   'assets/images/video-card.png',
   'assets/images/processor.png',
@@ -32,23 +30,63 @@ const List<String> kGpuImages = [
   'assets/images/ram.png',
 ];
 
-class GpuInfoPage extends StatefulWidget {
-  const GpuInfoPage({super.key});
+// Модель одной характеристики видеокарты для вертикального ListView.
+class GpuSpec {
+  final IconData icon;
+  final String title;
+  final String subtitle;
 
-  @override
-  State<GpuInfoPage> createState() => _GpuInfoPageState();
+  const GpuSpec({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 }
 
-class _GpuInfoPageState extends State<GpuInfoPage> {
-  // State: индекс текущего изображения в списке kGpuImages.
-  int _imageIndex = 0;
+// Список характеристик, отображаемых карточками (Card) в вертикальном ListView.
+const List<GpuSpec> kGpuSpecs = [
+  GpuSpec(
+    icon: Icons.memory,
+    title: 'Ядра CUDA: 16384',
+    subtitle: 'Отвечают за расчёт графики и работу с нейросетями',
+  ),
+  GpuSpec(
+    icon: Icons.sd_storage,
+    title: 'Видеопамять: 24 ГБ GDDR6X',
+    subtitle: 'Объём и тип видеопамяти',
+  ),
+  GpuSpec(
+    icon: Icons.precision_manufacturing,
+    title: 'Техпроцесс: 4 нм (TSMC)',
+    subtitle: 'Технология производства чипа',
+  ),
+  GpuSpec(
+    icon: Icons.bolt,
+    title: 'TDP: 450 Вт',
+    subtitle: 'Максимальное тепловыделение',
+  ),
+  GpuSpec(
+    icon: Icons.speed,
+    title: 'Частота: 2520 МГц (Boost)',
+    subtitle: 'Максимальная частота ядра в режиме разгона',
+  ),
+];
 
-  // Переключает изображение на следующее по кругу (после последнего —
-  // снова первое). Вызывается и по нажатию на кнопку, и по тапу на картинке.
-  void _nextImage() {
-    setState(() {
-      _imageIndex = (_imageIndex + 1) % kGpuImages.length;
-    });
+class GpuInfoPage extends StatelessWidget {
+  const GpuInfoPage({super.key});
+
+  // Показывает SnackBar с названием выбранного пункта характеристик.
+  void _showSpecSnackBar(BuildContext context, GpuSpec spec) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(spec.title),
+        action: SnackBarAction(
+          label: 'OK',
+          onPressed: () {},
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -62,110 +100,121 @@ class _GpuInfoPageState extends State<GpuInfoPage> {
         centerTitle: true,
         backgroundColor: Colors.lightGreen,
       ), // AppBar
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Название ПО
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'NVIDIA GeForce RTX 4090',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ), // Container: название ПО
-            const SizedBox(height: 16),
-
-            // Описание ПО
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Видеокарта (графический адаптер, GPU) — устройство, отвечающее '
-                'за формирование и вывод изображения на экран, а также за '
-                'ускорение вычислений, связанных с обработкой графики. '
-                'NVIDIA GeForce RTX 4090 — флагманская видеокарта на архитектуре '
-                'Ada Lovelace, предназначенная для игр в разрешении 4K и '
-                'профессиональных задач: рендеринга, работы с нейросетями и '
-                'трассировки лучей в реальном времени.',
-                style: TextStyle(fontSize: 16),
-              ),
-            ), // Container: описание ПО
-            const SizedBox(height: 16),
-
-            // Картинка (с циклической сменой по тапу) + список характеристик
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _nextImage,
+                // Название ПО
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'NVIDIA GeForce RTX 4090',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ), // Container: название ПО
+                const SizedBox(height: 16),
+
+                // Описание ПО
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Видеокарта (графический адаптер, GPU) — устройство, отвечающее '
+                    'за формирование и вывод изображения на экран, а также за '
+                    'ускорение вычислений, связанных с обработкой графики. '
+                    'NVIDIA GeForce RTX 4090 — флагманская видеокарта на архитектуре '
+                    'Ada Lovelace, предназначенная для игр в разрешении 4K и '
+                    'профессиональных задач: рендеринга, работы с нейросетями и '
+                    'трассировки лучей в реальном времени.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ), // Container: описание ПО
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Галерея (горизонтальный список)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ), // Padding: название, описание, заголовок галереи
+
+          // Горизонтальный ListView с изображениями со скруглёнными углами.
+          SizedBox(
+            height: 140,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: kGpuImages.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      height: 160,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.center,
+                      width: 120,
+                      color: Colors.grey.shade200,
                       child: Image.asset(
-                        kGpuImages[_imageIndex],
-                        width: 100,
-                        height: 100,
+                        kGpuImages[index],
                         fit: BoxFit.contain,
                       ), // Image.asset
                     ),
-                  ), // GestureDetector: тап по картинке переключает её
-                ), // Expanded: картинка
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('1. Ядра CUDA: 16384'),
-                        SizedBox(height: 6),
-                        Text('2. Видеопамять: 24 ГБ GDDR6X'),
-                        SizedBox(height: 6),
-                        Text('3. Техпроцесс: 4 нм (TSMC)'),
-                        SizedBox(height: 6),
-                        Text('4. TDP: 450 Вт'),
-                      ],
-                    ),
-                  ),
-                ), // Expanded: список характеристик
-              ],
-            ), // Row: картинка + список
-            const SizedBox(height: 12),
+                  ), // ClipRRect: скруглённые углы изображения
+                );
+              },
+            ), // ListView.builder: горизонтальная галерея
+          ), // SizedBox: ограничение высоты горизонтального ListView
 
-            // Кнопка для смены изображения (дублирует тап по картинке)
-            Center(
-              child: ElevatedButton(
-                onPressed: _nextImage,
-                child: const Text('Следующее изображение'),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Характеристики (вертикальный список)',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-            ), // Center: кнопка смены картинки
-            const SizedBox(height: 16),
+            ),
+          ),
 
-            const Divider(),
-            const SizedBox(height: 16),
+          // Вертикальный ListView из карточек с характеристиками.
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: kGpuSpecs.length,
+              itemBuilder: (context, index) {
+                final spec = kGpuSpecs[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: ListTile(
+                    leading: Icon(spec.icon, color: Colors.deepPurple),
+                    title: Text(spec.title),
+                    subtitle: Text(spec.subtitle),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _showSpecSnackBar(context, spec),
+                  ), // ListTile: иконка, заголовок, подзаголовок, стрелка
+                ); // Card: карточка характеристики
+              },
+            ), // ListView.builder: вертикальный список характеристик
+          ), // Expanded: список характеристик занимает оставшееся место
 
-            // ФИО и номер группы
-            Row(
+          const Divider(height: 1),
+
+          // ФИО и номер группы
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -192,9 +241,9 @@ class _GpuInfoPageState extends State<GpuInfoPage> {
                 ), // Container: ФИО, группа, номер студенческого билета
               ],
             ), // Row: ФИО номер группы
-          ],
-        ), // Column
-      ), // SingleChildScrollView
+          ), // Padding: блок данных студента
+        ],
+      ), // Column
     ); // Scaffold
   }
 }
