@@ -92,7 +92,9 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
   }
 
   // Переход фокуса к следующему доступному полю или завершение ввода.
-  void _onFieldSubmitted(String _) {
+  // Задан через onEditingComplete: он заменяет встроенную обработку кнопки
+  // клавиатуры, поэтому фокус переходит ровно на одно поле.
+  void _onEditingComplete() {
     if (widget.textInputAction == TextInputAction.next) {
       FocusScope.of(context).nextFocus();
     } else {
@@ -120,7 +122,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
               ? TextInputType.visiblePassword
               : TextInputType.name,
       textInputAction: widget.textInputAction,
-      onFieldSubmitted: _onFieldSubmitted,
+      onEditingComplete: _onEditingComplete,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       style: const TextStyle(color: Colors.black, fontSize: 15),
       decoration: InputDecoration(
