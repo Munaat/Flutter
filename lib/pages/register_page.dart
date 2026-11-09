@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../user_session.dart';
 import '../widgets/auth_widgets.dart';
 import '../widgets/text_field.dart';
-import 'home_page.dart';
-import 'login_page.dart';
 
 // Локальный main() для автономного запуска экрана (ПКМ → Run 'register_page.dart').
 void main() {
@@ -41,17 +40,13 @@ class _RegisterPageState extends State<RegisterPage> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
+      UserSession.name = _nameController.text.trim();
+      UserSession.email = _emailController.text.trim();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Регистрация прошла успешно')),
+        const SnackBar(content: Text('Регистрация прошла успешно. Войдите в аккаунт')),
       );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => GpuInfoPage(
-            name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-          ),
-        ),
-      );
+      // Возврат на экран входа с email нового пользователя.
+      Navigator.pop(context, UserSession.email);
     }
   }
 
@@ -119,9 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
       bottomNavigationBar: BottomAuthLink(
         question: 'Уже есть аккаунт?',
         action: 'Войдите',
-        onTap: () => Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        ),
+        onTap: () => Navigator.maybePop(context), // возврат на экран входа
       ),
     );
   }

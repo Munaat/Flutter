@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../routes.dart';
+import '../user_session.dart';
 import '../widgets/auth_widgets.dart';
 import '../widgets/text_field.dart';
-import 'home_page.dart';
-import 'register_page.dart';
 
 // Локальный main() для автономного запуска экрана (ПКМ → Run 'login_page.dart').
 void main() {
@@ -37,14 +37,23 @@ class _LoginPageState extends State<LoginPage> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
+      UserSession.email = _emailController.text.trim();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Вход выполнен успешно')),
       );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => GpuInfoPage(email: _emailController.text.trim()),
-        ),
-      );
+      // Успешная авторизация: основной экран заменяет экран входа.
+      Navigator.pushReplacementNamed(context, Routes.home);
+    }
+  }
+
+  // Переход к регистрации. Экран регистрации возвращает email
+  // зарегистрированного пользователя — подставляем его в поле.
+  Future<void> _openRegister() async {
+    final result = await Navigator.pushNamed(context, Routes.register);
+    if (!mounted) return;
+    if (result is String) {
+      _emailController.text = result;
+      _passwordController.clear();
     }
   }
 
@@ -108,9 +117,7 @@ class _LoginPageState extends State<LoginPage> {
       bottomNavigationBar: BottomAuthLink(
         question: 'Нет аккаунта?',
         action: 'Зарегистрируйтесь',
-        onTap: () => Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const RegisterPage()),
-        ),
+        onTap: _openRegister,
       ),
     );
   }

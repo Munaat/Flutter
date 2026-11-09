@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../routes.dart';
+import '../user_session.dart';
+import '../widgets/app_navigation_bar.dart';
 import '../widgets/auth_widgets.dart';
 import '../widgets/text_field.dart';
 
@@ -13,14 +16,7 @@ void main() {
 
 /// Экран профиля пользователя.
 class ProfilePage extends StatefulWidget {
-  final String name;
-  final String email;
-
-  const ProfilePage({
-    super.key,
-    this.name = 'Иванов Иван Иванович',
-    this.email = 'test123@mail.ru',
-  });
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -38,8 +34,8 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     // Поля имени и email заполняются текущими данными пользователя.
-    _nameController = TextEditingController(text: widget.name);
-    _emailController = TextEditingController(text: widget.email);
+    _nameController = TextEditingController(text: UserSession.name);
+    _emailController = TextEditingController(text: UserSession.email);
   }
 
   @override
@@ -58,6 +54,8 @@ class _ProfilePageState extends State<ProfilePage> {
   void _save() {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
+      UserSession.name = _nameController.text.trim();
+      UserSession.email = _emailController.text.trim();
       _showMessage('Данные профиля сохранены');
     }
   }
@@ -84,7 +82,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: GestureDetector(
-                          onTap: () => Navigator.of(context).maybePop(),
+                          // Профиль — раздел нижней панели, «назад» ведёт на основной экран.
+                          onTap: () => Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            Routes.home,
+                            (_) => false,
+                          ),
                           child: const CircleAvatar(
                             radius: 16,
                             backgroundColor: Colors.black,
@@ -181,6 +184,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+      bottomNavigationBar: const AppNavigationBar(currentIndex: 1),
     );
   }
 }

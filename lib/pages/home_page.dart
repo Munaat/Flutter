@@ -1,94 +1,50 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'profile_page.dart';
+import '../data/gpu_data.dart';
+import '../routes.dart';
+import '../widgets/app_navigation_bar.dart';
 
 // Локальный main() для автономного запуска экрана (ПКМ → Run 'home_page.dart').
 void main() {
   runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: GpuInfoPage(),
+    home: HomePage(),
   ));
 }
 
-// Список изображений для горизонтального ListView.
-const List<String> kGpuImages = [
-  'assets/images/video-card.png',
-  'assets/images/processor.png',
-  'assets/images/chip.png',
-  'assets/images/motherboard.png',
-  'assets/images/ram.png',
-];
+/// Основной экран приложения (код основного экрана из практической работы №4).
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
-// Модель одной характеристики видеокарты для вертикального ListView.
-class GpuSpec {
-  final IconData icon;
-  final String title;
-  final String subtitle;
+  // Десктоп и веб: на больших экранах увеличиваем отступы между блоками.
+  static bool get _isDesktopOrWeb =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
 
-  const GpuSpec({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-}
+  void _openDetail(BuildContext context, int index) {
+    Navigator.pushNamed(context, Routes.detail, arguments: index);
+  }
 
-// Список характеристик, отображаемых карточками (Card) в вертикальном ListView.
-const List<GpuSpec> kGpuSpecs = [
-  GpuSpec(
-    icon: Icons.memory,
-    title: 'Ядра CUDA: 16384',
-    subtitle: 'Отвечают за расчёт графики и работу с нейросетями',
-  ),
-  GpuSpec(
-    icon: Icons.sd_storage,
-    title: 'Видеопамять: 24 ГБ GDDR6X',
-    subtitle: 'Объём и тип видеопамяти',
-  ),
-  GpuSpec(
-    icon: Icons.precision_manufacturing,
-    title: 'Техпроцесс: 4 нм (TSMC)',
-    subtitle: 'Технология производства чипа',
-  ),
-  GpuSpec(
-    icon: Icons.bolt,
-    title: 'TDP: 450 Вт',
-    subtitle: 'Максимальное тепловыделение',
-  ),
-  GpuSpec(
-    icon: Icons.speed,
-    title: 'Частота: 2520 МГц (Boost)',
-    subtitle: 'Максимальная частота ядра в режиме разгона',
-  ),
-];
-
-class GpuInfoPage extends StatelessWidget {
-  // Данные пользователя, переданные с экрана входа/регистрации.
-  final String name;
-  final String email;
-
-  const GpuInfoPage({
-    super.key,
-    this.name = 'Иванов Иван Иванович',
-    this.email = 'test123@mail.ru',
-  });
-
-  // Показывает SnackBar с названием выбранного пункта характеристик.
-  void _showSpecSnackBar(BuildContext context, GpuSpec spec) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(spec.title),
-        persist: false, // возвращает автоматическое скрытие по duration
-        action: SnackBarAction(
-          label: 'OK',
-          onPressed: () {},
-        ),
-        duration: const Duration(seconds: 2),
+  // Блок с рамкой для названия и описания ПО.
+  Widget _framed(Widget child, {Alignment? alignment}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      alignment: alignment,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
       ),
+      child: child,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final double gap = _isDesktopOrWeb ? 32 : 16; // отступ между блоками
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -97,163 +53,193 @@ class GpuInfoPage extends StatelessWidget {
         ),
         centerTitle: true,
         backgroundColor: Colors.lightGreen,
-        actions: [
-          // Переход на экран профиля пользователя.
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            tooltip: 'Профиль',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ProfilePage(name: name, email: email),
-              ),
-            ),
-          ),
-        ],
-      ), // AppBar
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+      ),
+      // LayoutBuilder отдаёт ширину, доступную экрану: по ней выбираем раскладку.
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool wide = constraints.maxWidth > 600;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: gap / 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Название ПО
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
+                _framed(
+                  const Text(
                     'NVIDIA GeForce RTX 4090',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
-                ), // Container: название ПО
-                const SizedBox(height: 16),
+                  alignment: Alignment.center,
+                ),
+                SizedBox(height: gap),
 
                 // Описание ПО
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
+                _framed(
+                  const Text(
                     'Видеокарта (графический адаптер, GPU) — устройство, отвечающее '
-                        'за формирование и вывод изображения на экран, а также за '
-                        'ускорение вычислений, связанных с обработкой графики. '
-                        'NVIDIA GeForce RTX 4090 — флагманская видеокарта на архитектуре '
-                        'Ada Lovelace, предназначенная для игр в разрешении 4K и '
-                        'профессиональных задач: рендеринга, работы с нейросетями и '
-                        'трассировки лучей в реальном времени.',
+                    'за формирование и вывод изображения на экран, а также за '
+                    'ускорение вычислений, связанных с обработкой графики. '
+                    'NVIDIA GeForce RTX 4090 — флагманская видеокарта на архитектуре '
+                    'Ada Lovelace, предназначенная для игр в разрешении 4K и '
+                    'профессиональных задач: рендеринга, работы с нейросетями и '
+                    'трассировки лучей в реальном времени.',
                     style: TextStyle(fontSize: 16),
                   ),
-                ), // Container: описание ПО
-                const SizedBox(height: 12),
+                ),
+                SizedBox(height: gap),
 
                 const Text(
                   'Галерея (горизонтальный список)',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
+                const SizedBox(height: 8),
+                // Горизонтальный ListView с изображениями со скруглёнными углами.
+                SizedBox(
+                  height: 140,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: kGpuImages.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 120,
+                            padding: const EdgeInsets.all(8),
+                            color: Colors.grey.shade200,
+                            child: Image.asset(
+                              kGpuImages[index],
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: gap),
+
+                const Text(
+                  'Характеристики',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                // Ширина больше 600 — карточки в 2 столбца, иначе — в один.
+                wide ? _buildSpecGrid(context) : _buildSpecList(context),
+                SizedBox(height: gap),
+
+                const Divider(height: 1),
+                SizedBox(height: gap / 2),
+                const _StudentInfo(),
               ],
             ),
-          ), // Padding: название, описание, заголовок галереи
+          );
+        },
+      ),
+      bottomNavigationBar: const AppNavigationBar(currentIndex: 0),
+    );
+  }
 
-          // Горизонтальный ListView с изображениями со скруглёнными углами.
-          SizedBox(
-            height: 140,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: kGpuImages.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: 120,
-                      color: Colors.grey.shade200,
-                      child: Image.asset(
-                        kGpuImages[index],
-                        fit: BoxFit.contain,
-                      ), // Image.asset
-                    ),
-                  ), // ClipRRect: скруглённые углы изображения
-                );
-              },
-            ), // ListView.builder: горизонтальная галерея
-          ), // SizedBox: ограничение высоты горизонтального ListView
-
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Характеристики (вертикальный список)',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+  // Узкий экран: карточки одна под другой.
+  Widget _buildSpecList(BuildContext context) {
+    return Column(
+      children: [
+        for (int i = 0; i < kGpuSpecs.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _SpecCard(
+              spec: kGpuSpecs[i],
+              onTap: () => _openDetail(context, i),
             ),
           ),
+      ],
+    );
+  }
 
-          // Вертикальный ListView из карточек с характеристиками.
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: kGpuSpecs.length,
-              itemBuilder: (context, index) {
-                final spec = kGpuSpecs[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    leading: Icon(spec.icon, color: Colors.deepPurple),
-                    title: Text(spec.title),
-                    subtitle: Text(spec.subtitle),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _showSpecSnackBar(context, spec),
-                  ), // ListTile: иконка, заголовок, подзаголовок, стрелка
-                ); // Card: карточка характеристики
-              },
-            ), // ListView.builder: вертикальный список характеристик
-          ), // Expanded: список характеристик занимает оставшееся место
+  // Широкий экран: сетка из 2 столбцов.
+  Widget _buildSpecGrid(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true, // высота сетки — по содержимому
+      physics: const NeverScrollableScrollPhysics(), // прокручивает весь экран
+      itemCount: kGpuSpecs.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        mainAxisExtent: 96,
+      ),
+      itemBuilder: (context, i) => _SpecCard(
+        spec: kGpuSpecs[i],
+        onTap: () => _openDetail(context, i),
+      ),
+    );
+  }
+}
 
-          const Divider(height: 1),
+/// Карточка пункта: иконка, заголовок, подзаголовок, стрелка.
+class _SpecCard extends StatelessWidget {
+  final GpuSpec spec;
+  final VoidCallback onTap;
 
-          // ФИО и номер группы
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.person, size: 32),
-                ), // Container: иконка пользователя
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Ерашов Тимофей Дмитриевич\n'
-                          'ИКБО-64-23\n'
-                          '23И1816',
-                    ),
-                  ),
-                ), // Container: ФИО, группа, номер студенческого билета
-              ],
-            ), // Row: ФИО номер группы
-          ), // Padding: блок данных студента
-        ],
-      ), // Column
-    ); // Scaffold
+  const _SpecCard({required this.spec, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Center(
+        child: ListTile(
+          leading: Icon(spec.icon, color: Colors.deepPurple),
+          title: Text(spec.title),
+          subtitle: Text(
+            spec.subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+}
+
+/// Блок с ФИО, номером группы и студенческого билета.
+class _StudentInfo extends StatelessWidget {
+  const _StudentInfo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.person, size: 32),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'Ерашов Тимофей Дмитриевич\n'
+              'ИКБО-64-23\n'
+              '23И1816',
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
