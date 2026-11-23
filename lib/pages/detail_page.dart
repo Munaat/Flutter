@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../data/gpu_data.dart';
+import '../mock/gpu_data.dart';
 import '../widgets/app_navigation_bar.dart';
 
 // Локальный main() для автономного запуска экрана (ПКМ → Run 'detail_page.dart').

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'pages/detail_page.dart';
-import 'pages/home_page.dart';
+import 'pages/home/bloc/specs_bloc.dart';
+import 'pages/home/home_page.dart';
 import 'pages/loading_page.dart';
 import 'pages/login_page.dart';
 import 'pages/profile_page.dart';
@@ -30,7 +32,12 @@ class MyApp extends StatelessWidget {
         Routes.loading: (_) => const LoadingPage(),
         Routes.login: (_) => const LoginPage(),
         Routes.register: (_) => const RegisterPage(),
-        Routes.home: (_) => const HomePage(),
+        // Новый SpecsBloc создаётся при открытии экрана, событие загрузки
+        // сразу добавляется в поток каскадным оператором (..).
+        Routes.home: (_) => BlocProvider(
+              create: (_) => SpecsBloc()..add(const LoadSpecsEvent()),
+              child: const HomePage(),
+            ),
         Routes.detail: (_) => const DetailPage(),
         Routes.profile: (_) => const ProfilePage(),
       },
